@@ -2,6 +2,7 @@ package kz.ephram.restfulcurrencyconverter;
 
 import java.util.Map;
 
+//POJO класс для получения данных
 public class ExchangeRateResponse {
 	private boolean success;
 	private long timestamp;
