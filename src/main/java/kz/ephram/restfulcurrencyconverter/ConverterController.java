@@ -16,30 +16,46 @@ public class ConverterController {
 	 * метод в котором выполняется запрос на сторонний сервис, из него получаем наши
 	 * валюты и их курс к отношению ЕВРО, также получаем количество валюты к обмену.
 	 * http://api.exchangeratesapi.io/v1/latest?access_key=
-	 * 22c4fb6ef123c36b278731d0757d2438&symbols=USD,AUD,CAD,PLN,MXN&format=1
-	 * пример запроса в браузере такой - http://localhost:8080/currency?from=CAD&to=USD&amount=100
+	 * 22c4fb6ef123c36b278731d0757d2438&symbols=USD,AUD,CAD,PLN,MXN&format=1 пример
+	 * запроса в браузере такой -
+	 * http://localhost:8080/currency?from=CAD&to=USD&amount=100
 	 */
 	@RequestMapping("/currency")
 	public String getCurrencyExchange(@RequestParam String from, @RequestParam String to, @RequestParam String amount) {
-
-		// REST URL стороннего сервиса
-		String url = "http://api.exchangeratesapi.io/v1/latest?access_key=22c4fb6ef123c36b278731d0757d2438&symbols="
-				+ from + "," + to;
-
-		RestTemplate restTemplate = new RestTemplate();
 		
-		ExchangeRateResponse exchangeRateResponse = restTemplate.getForObject(url, ExchangeRateResponse.class);
+		//добавил try блок для вылавливания ошибок
+		try {
 
-		Map<String, Double> ratesMap = exchangeRateResponse.getRates();
+			// REST URL стороннего сервиса
+			String url = "http://api.exchangeratesapi.io/v1/latest?access_key=22c4fb6ef123c36b278731d0757d2438&symbols="
+					+ from + "," + to;
 
-		BigDecimal number1 = new BigDecimal(ratesMap.get(from));
+			// создаем RestTemplate
+			RestTemplate restTemplate = new RestTemplate();
 
-		BigDecimal number2 = new BigDecimal(ratesMap.get(to));
+			// делаем запрос GET на сторонний сервис и парсим его в обьект
+			// ExchangeRateResponse
+			ExchangeRateResponse exchangeRateResponse = restTemplate.getForObject(url, ExchangeRateResponse.class);
 
-		number2 = number2.multiply(new BigDecimal(amount));
+			// получаем map пару Валюта:курс к отношонию к Евро
+			Map<String, Double> ratesMap = exchangeRateResponse.getRates();
 
-		BigDecimal result = number2.divide(number1, 10, RoundingMode.HALF_UP);
+			// получаем курсы валют в виде BigDecimal
+			BigDecimal number1 = new BigDecimal(ratesMap.get(from));
+			BigDecimal number2 = new BigDecimal(ratesMap.get(to));
 
-		return result.toString();
+			// вторую валюту умножаем на количество amount
+			number2 = number2.multiply(new BigDecimal(amount));
+
+			// разделяем на первую валюту, округлением до 10 позиций после запятой
+			BigDecimal result = number2.divide(number1, 10, RoundingMode.HALF_UP);
+
+			// возврат результата в виде строки
+			return result.toString();
+		} catch (Exception e) {
+			e.printStackTrace();
+			//вывод в браузере в случае ввода неправильного значения
+			return "Неправильно введены значения";
+		}
 	}
 }
